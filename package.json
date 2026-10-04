@@ -3,16 +3,18 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "server"
+    "server",
+    "client"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "dev": "npm run dev -w server",
+    "dev": "node scripts/dev.js",
+    "build": "npm run build -w client",
     "start": "npm start -w server",
     "seed": "npm run seed -w server",
-    "test": "npm test -w server",
+    "test": "npm test -w server && npm test -w client",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write ."
   },
