@@ -1,0 +1,103 @@
+{
+  "version": 2,
+  "effectiveFrom": "2026-10-15",
+  "changelog": "SPAM-1 tightened: 2 or more links now count as spam (v1 said 3). HAR-1 widened: mocking a person's appearance is now named explicitly. New clause IMP-1: impersonating another user.",
+  "clauses": [
+    {
+      "code": "HAR-1",
+      "title": "Targeted harassment",
+      "text": "Content that insults, demeans or mocks a specific identifiable person, including mocking their appearance, is not allowed.",
+      "defaultSeverity": "medium",
+      "allowedActions": ["label", "limit", "remove"],
+      "deterministic": { "keywords": ["worthless idiot"], "patterns": [], "alwaysEscalate": false },
+      "examples": {
+        "violating": ["@sam you are a worthless idiot", "@sam look at that ugly face"],
+        "allowed": ["This argument is idiotic"]
+      }
+    },
+    {
+      "code": "VIO-1",
+      "title": "Threats of violence",
+      "text": "Content that threatens, encourages or celebrates physical harm against a person or group is not allowed.",
+      "defaultSeverity": "high",
+      "allowedActions": ["limit", "remove"],
+      "deterministic": {
+        "keywords": [],
+        "patterns": ["\\bi(?:'m| am| will|'ll) (?:going to )?(?:kill|hurt|beat) you\\b"],
+        "alwaysEscalate": false
+      },
+      "examples": {
+        "violating": ["I will hurt you if I see you again"],
+        "allowed": ["This workout is going to kill me"]
+      }
+    },
+    {
+      "code": "HATE-1",
+      "title": "Hate speech against protected groups",
+      "text": "Content that attacks or dehumanises people based on a protected characteristic such as race, ethnicity, religion, disability, gender or sexual orientation is not allowed.",
+      "defaultSeverity": "high",
+      "allowedActions": ["label", "limit", "remove"],
+      "deterministic": { "keywords": [], "patterns": [], "alwaysEscalate": false },
+      "examples": {
+        "violating": ["People of that religion are vermin"],
+        "allowed": ["I disagree with that religion's teachings"]
+      }
+    },
+    {
+      "code": "SH-1",
+      "title": "Self-harm content",
+      "text": "Content that encourages or gives instructions for self-harm is not allowed. Personal disclosures of distress are reviewed by a person so the author can be offered support.",
+      "defaultSeverity": "high",
+      "allowedActions": ["label", "limit"],
+      "deterministic": {
+        "keywords": ["want to disappear", "end it all"],
+        "patterns": [],
+        "alwaysEscalate": true
+      },
+      "examples": {
+        "violating": ["Here is how to hurt yourself without anyone noticing"],
+        "allowed": ["Talking to a counsellor helped me a lot"]
+      }
+    },
+    {
+      "code": "PII-1",
+      "title": "Sharing private personal information",
+      "text": "Posting someone's private contact details, such as an email address or phone number, is not allowed.",
+      "defaultSeverity": "high",
+      "allowedActions": ["limit", "remove"],
+      "deterministic": { "keywords": [], "patterns": [], "alwaysEscalate": false },
+      "examples": {
+        "violating": ["Call Jordan at 555-123-4567 and tell them what you think"],
+        "allowed": ["Contact the support team through the help page"]
+      }
+    },
+    {
+      "code": "SPAM-1",
+      "title": "Spam and unsolicited promotion",
+      "text": "Repetitive posting or unsolicited promotion, including posts with 2 or more links, is not allowed.",
+      "defaultSeverity": "low",
+      "allowedActions": ["label", "limit"],
+      "deterministic": { "keywords": [], "patterns": [], "alwaysEscalate": false, "linkThreshold": 2 },
+      "examples": {
+        "violating": ["Great deals https://a.example and https://b.example"],
+        "allowed": ["The source is https://news.example/article"]
+      }
+    },
+    {
+      "code": "IMP-1",
+      "title": "Impersonation",
+      "text": "Pretending to be another user, a moderator or an official account in a way that could mislead people is not allowed.",
+      "defaultSeverity": "medium",
+      "allowedActions": ["label", "limit", "remove"],
+      "deterministic": {
+        "keywords": [],
+        "patterns": ["\\bi am (?:the )?(?:real|official) @?\\w+"],
+        "alwaysEscalate": false
+      },
+      "examples": {
+        "violating": ["I am the real @sam, ignore the other account"],
+        "allowed": ["I am a big fan of @sam"]
+      }
+    }
+  ]
+}
