@@ -31,7 +31,7 @@ Lightly edited for spelling.
 | "Keep the UI minimalistic like memorable.sh, very smooth, thin highlighted borders."                                                       | React 19 SPA, 9 screens, dark theme, Geist / Instrument Serif                                         | Kept; spot-checked in the browser pane                                                        |
 | "I've decided to use the free Gemini API instead of Anthropic; change the code."                                                           | New `geminiClient.js` with forced function calling; same schema, validation, repair retry and logging | Kept. The provider is swappable through `AI_PROVIDER`                                         |
 | "Write a full README: every endpoint, input and response, feature by feature."                                                             | A 1,500-line README                                                                                   | Kept, then restructured in the final session (architecture, scope, limitations, Vercel)       |
-| "Create admin@example.com with password 1234, add example data, make it fully usable, finish the docs, make it ready to deploy on Vercel." | Seed changes, admin read-only oversight, Gemini back-off, Vercel function + `vercel.json`, docs       | Kept, after an end-to-end run through the Vercel handler                                      |
+| "Create admin@example.com with password 1234, add example data, make it fully usable, finish the docs, make it ready to deploy on Vercel." | Seed changes, admin read-only oversight, Gemini back-off, Vercel Services config, docs                | Kept, after an end-to-end run through the Vercel entry point                                  |
 
 ## Delegated work
 
@@ -94,7 +94,7 @@ Lightly edited for spelling.
   - CI runs both on every push.
 - **Live database:** the seed ran against Atlas. Its output: 5 users, policy v1, 15 items, and cases split 10
   awaiting review, 6 auto-cleared, 1 resolved.
-- **End-to-end:** a scripted run through the Vercel function entry point (`api/index.js`) in production mode
+- **End-to-end:** a scripted run through the Vercel function entry point in production mode
   passed 25 of 25 checks:
   - all 5 logins
   - post → background analysis → moderator decision → visibility change

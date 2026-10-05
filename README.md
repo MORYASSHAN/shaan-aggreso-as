@@ -99,7 +99,7 @@ credentials. On the sign-in page, the demo buttons log in with one click when th
 | Frontend | React 19, React Router, TanStack Query, Tailwind CSS 4, Vite                                  |
 | Tests    | Vitest, Supertest, mongodb-memory-server (in-memory replica set), Testing Library             |
 | CI       | GitHub Actions: `npm ci`, then `npm run lint`, then `npm test` on Node 22                     |
-| Hosting  | Vercel: static client plus one serverless function (`api/index.js`); any Node host also works |
+| Hosting  | Vercel Services: `client` (Vite, static) and `server` (Express function) on one domain        |
 
 ---
 
@@ -140,7 +140,7 @@ flowchart LR
 - **Policies are versioned and immutable.** Publishing installs a new version in a transaction, then
   re-analyses unresolved cases. Every analysis and decision records the version it used.
 - **Same code locally and on Vercel.** `server/src/index.js` runs Express as a long-lived server;
-  `api/index.js` wraps the same app as a Vercel function and uses `waitUntil` so background analysis finishes
+  `server/src/vercel.js` wraps the same app for the Vercel `server` service and uses `waitUntil` so background analysis finishes
   after the response is sent.
 
 ---
@@ -151,8 +151,7 @@ flowchart LR
 .
 ├── .env.example              # Copy to .env and fill in (never put real secrets here)
 ├── AGENT_USAGE.md            # How AI coding tools were used and verified
-├── vercel.json               # Vercel build, function and rewrite settings
-├── api/index.js              # Vercel function: wraps the Express app
+├── vercel.json               # Vercel Services: client + server, public rewrites
 ├── policies/
 │   ├── policy.v1.json        # Installed by the seed script
 │   └── policy.v2.json        # Example of a newer version to publish from the UI
@@ -160,6 +159,7 @@ flowchart LR
 ├── server/
 │   ├── scripts/seed.js       # Resets the DB with demo users, content, reports and a decision
 │   ├── src/
+│   │   ├── vercel.js         # Vercel entry: same app, lazy DB connection, waitUntil
 │   │   ├── index.js          # Entry: load .env → validate config → connect DB → listen
 │   │   ├── app.js            # Express app (logging, helmet, JSON, /api, static client in prod)
 │   │   ├── config.js         # Zod-validated environment
@@ -1612,25 +1612,33 @@ npm test
 
 ### Vercel (recommended)
 
-The repo is ready for Vercel as is. `vercel.json` builds the React app as static files and runs the API as one
-serverless function (`api/index.js`) on the same domain, so there is no CORS and the session cookie just works.
+The repo deploys as one Vercel project with two [services](https://vercel.com/docs/services), defined in
+`vercel.json`. Both are served from the same domain, so the browser calls `/api/...` same-origin: no CORS, no
+API base URL to configure, and the session cookie just works.
 
-| Setting (from `vercel.json`) | Value                                                      |
-| ---------------------------- | ---------------------------------------------------------- |
-| Install command              | `npm ci --include=dev` (Vite is a dev dependency)          |
-| Build command                | `npm run build`                                            |
-| Output directory             | `client/dist`                                              |
-| Function                     | `api/index.js`, `maxDuration` 300 s, bundles `policies/**` |
-| Rewrites                     | `/api/*` → the function; everything else → `index.html`    |
+| Service  | Root      | Framework | Public path           | What it does                                                         |
+| -------- | --------- | --------- | --------------------- | -------------------------------------------------------------------- |
+| `server` | `server/` | Express   | `/api/*`              | The API, as one function (`src/vercel.js`, `maxDuration` 300 s)      |
+| `client` | `client/` | Vite      | everything else (`/`) | The React build (`dist/`), with an `index.html` fallback for routing |
+
+- **The server gets the full path.** A request to `/api/health` arrives as `/api/health`, which matches the
+  routes Express mounts under `/api`.
+- **No service bindings.** The services never call each other server-side. The browser reaches the API
+  through the public `/api/*` rewrite.
+- **`src/vercel.js`** default-exports an Express app that connects to MongoDB on the first request, reuses the
+  connection while the instance is warm, and uses `waitUntil` so background analysis finishes after the
+  response is sent.
+- **Client install** runs `npm ci --include=dev`, because Vite is a dev dependency. npm resolves the workspace
+  root from `client/`, so both services install from the single root `package-lock.json`.
 
 **Steps**
 
 1. **MongoDB Atlas → Network Access:** allow `0.0.0.0/0`. Vercel functions do not have fixed outbound IPs.
 2. **Seed the production database once, from your machine.** Put the production `MONGODB_URI` in your local
    `.env` and run `npm run seed`. This drops that database and creates the demo data.
-3. **Import the repository** in Vercel (**Add New → Project**). Leave **Framework Preset** as _Other_ and the
-   root directory as `./`; `vercel.json` supplies the rest.
-4. **Environment variables** (Project → Settings → Environment Variables):
+3. **Import the repository** in Vercel (**Add New → Project**). Keep the root directory as `./`. Vercel reads
+   the `services` in `vercel.json` and builds `client` and `server` separately.
+4. **Environment variables** (Project → Settings → Environment Variables; they are shared by both services):
 
    | Name                 | Value                                                                     |
    | -------------------- | ------------------------------------------------------------------------- |
@@ -1645,7 +1653,8 @@ serverless function (`api/index.js`) on the same domain, so there is no CORS and
    | `VITE_DEMO_PASSWORD` | Optional. `1234` enables one-click demo logins. It is read at build time. |
 
 5. **Deploy**, then open `https://<your-app>.vercel.app/api/health`. It should return
-   `{"ok":true,"db":"connected","activePolicyVersion":1,...}`.
+   `{"ok":true,"db":"connected","activePolicyVersion":1,...}`. Open `/queue` directly as well, to confirm the
+   client's routing fallback.
 6. Sign in as `admin@example.com` with password `1234`.
 
 Changing a `VITE_*` variable needs a redeploy, because Vite bakes it into the client at build time.
@@ -1659,6 +1668,10 @@ npx vercel link
 ```bash
 npx vercel --prod
 ```
+
+`vercel dev` runs both services together locally. On Windows, the CLI's local Express runner can reset
+connections even for a one-route app; if that happens, use `npm run dev` for local work. It runs the same
+Express app and Vite with an `/api` proxy, so the routing matches production.
 
 ### Any Node host (Render, Railway, a VM)
 
