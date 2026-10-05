@@ -7,28 +7,28 @@ const EnvSchema = z
     PORT: z.coerce.number().int().positive().default(4000),
     MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
     JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
-    AI_PROVIDER: z.enum(['mock', 'claude']).default('mock'),
-    ANTHROPIC_API_KEY: z.string().optional().default(''),
-    ANTHROPIC_MODEL: z.string().optional().default(''),
+    AI_PROVIDER: z.enum(['mock', 'gemini']).default('mock'),
+    GEMINI_API_KEY: z.string().optional().default(''),
+    GEMINI_MODEL: z.string().optional().default(''),
     AI_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
     AI_CONCURRENCY: z.coerce.number().int().positive().default(2),
     APPEAL_WINDOW_DAYS: z.coerce.number().int().positive().default(14),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   })
   .superRefine((env, ctx) => {
-    if (env.AI_PROVIDER !== 'claude') return;
-    if (!env.ANTHROPIC_API_KEY) {
+    if (env.AI_PROVIDER !== 'gemini') return;
+    if (!env.GEMINI_API_KEY) {
       ctx.addIssue({
         code: 'custom',
-        path: ['ANTHROPIC_API_KEY'],
-        message: 'required when AI_PROVIDER=claude',
+        path: ['GEMINI_API_KEY'],
+        message: 'required when AI_PROVIDER=gemini',
       });
     }
-    if (!env.ANTHROPIC_MODEL) {
+    if (!env.GEMINI_MODEL) {
       ctx.addIssue({
         code: 'custom',
-        path: ['ANTHROPIC_MODEL'],
-        message: 'required when AI_PROVIDER=claude',
+        path: ['GEMINI_MODEL'],
+        message: 'required when AI_PROVIDER=gemini',
       });
     }
   });

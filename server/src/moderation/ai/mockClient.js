@@ -1,7 +1,7 @@
 import { AiTimeoutError } from './errors.js';
 
 /**
- * Deterministic stand-in for Claude (AI_PROVIDER=mock). Tests and local development never need the real API.
+ * Deterministic stand-in for Gemini (AI_PROVIDER=mock). Tests and local development never need the real API.
  * Markers in the text force each failure path on purpose:
  *   [mock:timeout] [mock:error] [mock:invalid] [mock:repair] [mock:fakequote] [mock:badclause] [mock:disallowed]
  * Without a marker it applies a few simple heuristics so seeded demo content gets realistic output.

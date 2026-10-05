@@ -27,7 +27,7 @@ export const AppealSummaryOutput = z.object({
   policy_changed: z.boolean(),
 });
 
-// JSON Schema sent to Claude as the tool's input_schema. Keep in sync with ReviewOutput above.
+// JSON Schema sent to Gemini as the function's parametersJsonSchema. Keep in sync with ReviewOutput above.
 export const SUBMIT_REVIEW_TOOL = {
   name: 'submit_review',
   description: 'Submit your assessment of the content against the policy. Call this exactly once.',
