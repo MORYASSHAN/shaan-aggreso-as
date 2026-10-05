@@ -23,6 +23,9 @@ function detail(event) {
     return `${a.outcome} → ${a.finalAction}${a.clauseCodes?.length ? ` (${a.clauseCodes.join(', ')})` : ''}`;
   if (event.action === 'content.visibility_changed') return `${event.before?.visibility} → ${a.visibility}`;
   if (event.action === 'auth.denied') return a.reason;
+  if (event.action.startsWith('analysis.') && !event.after) return 'checked against the policy';
+  if (event.action === 'analysis.failed')
+    return `AI review unavailable · rule findings only · proposed ${a.proposedAction} · sent to a moderator`;
   if (event.action.startsWith('analysis.'))
     return `proposed ${a.proposedAction}${a.aiStatus && a.aiStatus !== 'ok' ? ` · AI ${a.aiStatus}` : ''}`;
   if (event.action === 'report.created' && a.reasonCode) return a.reasonCode;

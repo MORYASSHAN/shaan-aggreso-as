@@ -181,7 +181,8 @@ function CaseBody({ data, canModerate }) {
       )}
       {data.aiUnavailable && (
         <Notice tone="danger">
-          AI review unavailable. Showing rule findings only; a person must review this case.
+          AI review unavailable. {data.aiFailure ?? ''} Showing rule findings only; a person must review this
+          case.
         </Notice>
       )}
       {kase.policyChangedFrom && analysis && kase.policyChangedFrom !== analysis.policyVersion && (
@@ -232,6 +233,14 @@ export function CaseDetailPage() {
       <Link to="/queue" className="label mb-6 inline-block hover:text-fg">
         ‹ Queue
       </Link>
+      {query.data && (
+        <Link
+          to={`/content/${query.data.content._id}/history`}
+          className="label mb-6 ml-6 inline-block hover:text-fg"
+        >
+          Full history ›
+        </Link>
+      )}
       <QueryState query={query}>
         {(data) => (
           <>

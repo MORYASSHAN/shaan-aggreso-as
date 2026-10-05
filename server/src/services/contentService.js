@@ -7,11 +7,13 @@ import {
   DECISION_STAGE,
   ERROR,
   MODERATOR_ROLES,
+  OVERSIGHT_ROLES,
   TRIGGER,
   VISIBILITY,
 } from '../constants.js';
 import { withTransaction } from '../db.js';
-import { Analysis, Appeal, Case, Content, Decision, Report } from '../models/index.js';
+import { AiRun, Analysis, Appeal, Case, Content, Decision, Report } from '../models/index.js';
+import { aiFailureReason } from '../utils/aiRun.js';
 import { appError } from '../utils/AppError.js';
 import { analyzeCase } from './analysisService.js';
 import * as auditService from './auditService.js';
@@ -226,11 +228,30 @@ export async function listMyContent(actor) {
   }));
 }
 
+const AI_EVENTS = [AUDIT.ANALYSIS_COMPLETED, AUDIT.ANALYSIS_FAILED];
+
+async function withAiStatus(analyses) {
+  const ids = analyses.map((a) => a.aiRunId).filter(Boolean);
+  const runs = await AiRun.find({ _id: { $in: ids } })
+    .select('status model latencyMs errorMessage')
+    .lean();
+  const byId = new Map(runs.map((r) => [String(r._id), r]));
+  return analyses.map((analysis) => {
+    const run = byId.get(String(analysis.aiRunId));
+    return {
+      ...analysis,
+      ai: run
+        ? { status: run.status, model: run.model, latencyMs: run.latencyMs, failure: aiFailureReason(run) }
+        : null,
+    };
+  });
+}
+
 export async function getHistory(contentId, viewer) {
   const content = await Content.findById(contentId).lean();
   if (!content) throw appError(ERROR.NOT_FOUND, 'Content not found.');
-  const moderator = isModerator(viewer);
-  if (!moderator && String(content.authorId) !== viewer.id) {
+  const oversight = OVERSIGHT_ROLES.includes(viewer?.role);
+  if (!oversight && String(content.authorId) !== viewer.id) {
     throw appError(ERROR.FORBIDDEN, 'You can only see the history of your own content.');
   }
   const cases = await Case.find({ contentId }).sort({ createdAt: 1 }).lean();
@@ -248,17 +269,20 @@ export async function getHistory(contentId, viewer) {
   ]);
   const entityIds = [contentId, ...caseIds, ...[...decisions, ...appeals, ...reports].map((x) => x._id)];
   let audit = await auditService.listForEntities(entityIds);
-  // Authors see that their content was reported, never who reported it.
-  if (!moderator) {
-    audit = audit.map((e) =>
-      e.action === AUDIT.REPORT_CREATED ? { ...e, actor: { type: e.actor.type }, after: null } : e,
-    );
+  // Authors see that their content was reported, never who reported it, and never the AI's proposal.
+  if (!oversight) {
+    audit = audit.map((e) => {
+      if (e.action === AUDIT.REPORT_CREATED) return { ...e, actor: { type: e.actor.type }, after: null };
+      if (AI_EVENTS.includes(e.action)) return { ...e, after: null };
+      return e;
+    });
   }
   return {
     content,
     cases,
-    analyses: moderator
-      ? analyses
+    // Authors never see unreviewed AI findings; staff see the full review and why the AI failed, if it did.
+    analyses: oversight
+      ? await withAiStatus(analyses)
       : analyses.map(({ _id, caseId, policyVersion, createdAt }) => ({
           _id,
           caseId,
@@ -266,7 +290,7 @@ export async function getHistory(contentId, viewer) {
           createdAt,
         })),
     decisions,
-    appeals,
+    appeals: oversight ? appeals : appeals.map(({ aiSummary, assignedReviewerId, ...appeal }) => appeal),
     audit,
   };
 }

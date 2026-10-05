@@ -15,6 +15,11 @@ const SIZES = {
   md: 'h-9 px-3.5',
 };
 
+// Also used by elements that must look like a button but are not one, e.g. a file-input label.
+export function buttonClass(variant = 'secondary', size = 'md') {
+  return `${BASE} ${VARIANTS[variant]} ${SIZES[size]}`;
+}
+
 export function Button({
   variant = 'secondary',
   size = 'md',
@@ -28,7 +33,7 @@ export function Button({
   return (
     <button
       type="button"
-      className={`${BASE} ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
+      className={`${buttonClass(variant, size)} ${className}`}
       disabled={disabled || busy}
       aria-busy={busy || undefined}
       {...props}

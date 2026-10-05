@@ -4,12 +4,12 @@ How AI coding tools were used to build this project, what they got wrong, and ho
 
 ## Tools
 
-| Tool                                   | Used for                                                                          |
-| -------------------------------------- | --------------------------------------------------------------------------------- |
-| Claude Code (desktop app), Claude Opus | Writing and editing code, running commands, tests and the app, reading docs       |
-| Claude Code subagents                  | Two delegated tasks in the final session (below)                                  |
-| Claude Code browser pane               | Clicking through the running app: login, queue, case detail, decision form, audit |
-| Google Gemini (`gemini-3.8-flash`)     | Runtime only: the AI reviewer inside the product, not a coding tool               |
+| Tool                                    | Used for                                                                          |
+| --------------------------------------- | --------------------------------------------------------------------------------- |
+| Claude Code (desktop app), Claude Opus  | Writing and editing code, running commands, tests and the app, reading docs       |
+| Claude Code subagents                   | Two delegated tasks in the final session (below)                                  |
+| Claude Code browser pane                | Clicking through the running app: login, queue, case detail, decision form, audit |
+| Google Gemini (`gemini-3.5-flash-lite`) | Runtime only: the AI reviewer inside the product, not a coding tool               |
 
 Three working sessions, each started from a written brief:
 
@@ -63,6 +63,10 @@ Lightly edited for spelling.
 - **Claude API with forced tool calls.** The newest Claude models rejected the forced-tool-call pattern, and the
   API needs paid credit. I chose Gemini's free tier instead, and the Anthropic client and SDK were removed.
 - **Retired model.** `gemini-2.5-flash` returned 404 for new keys. Switched to `gemini-3.8-flash`.
+- **Daily quota.** `gemini-3.8-flash` turned out to allow only 20 free requests per day, so new posts started
+  failing with 429. Four candidate models were tested with the app's real request, and `gemini-3.5-flash-lite`
+  (valid output, about 6 s, separate quota) became the default. The History and case pages now say exactly why
+  an AI review failed (overloaded, quota, timeout, invalid output) instead of a bare "AI error".
 - **Atlas connection.**
   - "bad auth" was caused by the `<` `>` template brackets left in `MONGODB_URI`.
   - On this Windows machine, Node's resolver cannot do `mongodb+srv` SRV lookups. The first workaround was to
@@ -90,7 +94,7 @@ Lightly edited for spelling.
 
 - **Automated:**
   - `npm run lint` (ESLint + Prettier) runs clean.
-  - `npm test` passes: 57 server tests on an in-memory MongoDB replica set, and 9 client tests.
+  - `npm test` passes: 61 server tests on an in-memory MongoDB replica set, and 9 client tests.
   - CI runs both on every push.
 - **Live database:** the seed ran against Atlas. Its output: 5 users, policy v1, 15 items, and cases split 10
   awaiting review, 6 auto-cleared, 1 resolved.
@@ -106,8 +110,17 @@ Lightly edited for spelling.
 - **Gemini:** live calls checked:
   - A verified quote with VIO-1 at 0.98 confidence; the content stayed visible until a human decided.
   - During an overload, the safe fallback to "AI review unavailable".
-- **Browser:** the browser pane was used to sign in as admin, check the queue, and confirm the read-only case
-  view hides decision controls.
+- **Browser walkthrough with live Gemini**, every role, through the single `npm run dev` command:
+  - author posts → Gemini cites HAR-1 and VIO-1 with verified quotes, interpretation, severity and confidence
+    reasons, and six "why a human must decide" reasons; the post stays visible
+  - another user reports it → the moderator modifies the action to "limit" (saved with policy v1)
+  - author appeals with evidence → the original moderator cannot resolve it → the senior overturns it and the
+    post is visible again
+  - admin publishes v2 from the in-browser editor → 10/10 cases re-analysed by Gemini (the new IMP-1 clause and
+    the stricter SPAM-1 both took effect)
+  - the History page shows the full AI review to staff and plain status, decision, appeal evidence and outcome
+    to the author; a forced AI failure shows its reason instead of a bare "AI error"
+  - admin sees the queue, cases and audit log read-only
 - **Secrets:**
   - `.env` is git-ignored.
   - Every file a commit would include, and the git history, were scanned for the real `.env` values. No

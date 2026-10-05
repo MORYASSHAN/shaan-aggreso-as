@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
 import { appealsApi } from '../../api/resources.js';
-import { ActionBadge, AiLabel, Badge, VersionBadge, VisibilityBadge } from '../../components/Badge.jsx';
+import { ActionBadge, AiLabel, Badge, VisibilityBadge } from '../../components/Badge.jsx';
 import { PageHeader } from '../../components/Page.jsx';
 import { QueryState } from '../../components/QueryState.jsx';
 import { dateTime } from '../../lib/format.js';
+import { DecisionSummary } from './DecisionSummary.jsx';
 import { ResolveForm } from './ResolveForm.jsx';
 
 function Panel({ step, title, children }) {
@@ -16,26 +17,6 @@ function Panel({ step, title, children }) {
       </header>
       <div className="flex flex-1 flex-col gap-4 px-5 py-4 text-sm">{children}</div>
     </section>
-  );
-}
-
-function DecisionSummary({ decision }) {
-  return (
-    <>
-      <div className="flex flex-wrap items-center gap-1.5">
-        <ActionBadge action={decision.finalAction} />
-        {decision.clauseCodes.map((c) => (
-          <Badge key={c} tone="accent">
-            {c}
-          </Badge>
-        ))}
-        <VersionBadge version={decision.policyVersion} prefix="Decided under " />
-      </div>
-      {decision.rationale && <p className="text-muted">{decision.rationale}</p>}
-      <p className="font-mono text-[11px] text-subtle">
-        {decision.reviewerId?.name} · {dateTime(decision.createdAt)}
-      </p>
-    </>
   );
 }
 

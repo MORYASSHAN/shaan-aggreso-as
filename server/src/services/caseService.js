@@ -2,6 +2,7 @@ import { AUDIT, CASE, ERROR } from '../constants.js';
 import { withTransaction } from '../db.js';
 import { AiRun, Analysis, Appeal, Case, Content, Decision, Report } from '../models/index.js';
 import { AI_UNAVAILABLE } from '../moderation/combine.js';
+import { aiFailureReason } from '../utils/aiRun.js';
 import { appError } from '../utils/AppError.js';
 import { excerpt } from '../utils/text.js';
 import { analyzeCase } from './analysisService.js';
@@ -90,6 +91,7 @@ export async function getCase(caseId) {
     analysis: current,
     aiRun,
     aiUnavailable: Boolean(aiRun && aiRun.status !== 'ok'),
+    aiFailure: aiFailureReason(aiRun),
     pastAnalyses: analyses.filter((a) => a !== current),
     decisions,
     appeals,

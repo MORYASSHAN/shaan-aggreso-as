@@ -1,4 +1,4 @@
-import { ActionBadge, AiLabel, SeverityBadge, VersionBadge } from '../../components/Badge.jsx';
+import { ActionBadge, AiLabel, Badge, SeverityBadge, VersionBadge } from '../../components/Badge.jsx';
 import { Section } from '../../components/Page.jsx';
 import { percent } from '../../lib/format.js';
 
@@ -6,7 +6,10 @@ export function RecommendationCard({ analysis, aiUnavailable }) {
   const rec = analysis.recommendation;
   const strongest = [...analysis.aiFindings].sort((a, b) => b.confidence - a.confidence)[0];
   return (
-    <Section title="Recommendation" aside={<AiLabel />}>
+    <Section
+      title="Recommendation"
+      aside={aiUnavailable ? <Badge tone="warn">Rules only</Badge> : <AiLabel />}
+    >
       <div className="flex flex-col gap-4 px-5 py-4">
         <dl className="grid grid-cols-3 gap-3">
           <div>

@@ -35,7 +35,8 @@ credentials. On the sign-in page, the demo buttons log in with one click when th
 4. **Moderator:** try to resolve that appeal. It is refused (`SAME_REVIEWER`) because they made the original
    decision.
 5. **Senior:** **Appeals** → open it → uphold, overturn or modify.
-6. **Admin:** **Policy** → publish `policies/policy.v2.json`. Every unresolved case is re-analysed under v2.
+6. **Admin:** **Policy** → **Load example v2** → **Publish version**. No file is needed: the draft opens in an
+   editor. Every unresolved case is re-analysed under v2 with a live progress bar.
    Then check **Audit** for the full trail.
 
 **Sample inputs to post as an author:**
@@ -256,7 +257,7 @@ prints which variable is invalid. Inline `# comments` and empty values in `.env`
 | `JWT_SECRET`         | **yes**                   | –                 | Secret that signs session tokens. At least 16 characters.                                                        |
 | `AI_PROVIDER`        | no                        | `mock`            | `mock` (deterministic, offline) or `gemini`.                                                                     |
 | `GEMINI_API_KEY`     | when `AI_PROVIDER=gemini` | –                 | Google AI Studio API key.                                                                                        |
-| `GEMINI_MODEL`       | when `AI_PROVIDER=gemini` | –                 | A Gemini model that supports function calling, e.g. `gemini-3.8-flash`.                                          |
+| `GEMINI_MODEL`       | when `AI_PROVIDER=gemini` | –                 | A Gemini model that supports function calling, e.g. `gemini-3.5-flash-lite`.                                     |
 | `AI_TIMEOUT_MS`      | no                        | `30000`           | Timeout per AI attempt. Up to 2 retries on timeout, 429 or 5xx, within 2 × this value. Use `60000` for Gemini.   |
 | `AI_CONCURRENCY`     | no                        | `2`               | How many background AI jobs run at once. Use `1` on the Gemini free tier.                                        |
 | `APPEAL_WINDOW_DAYS` | no                        | `14`              | How long after a decision the author can appeal.                                                                 |
@@ -272,15 +273,15 @@ prints which variable is invalid. Inline `# comments` and empty values in `.env`
 
 Run these from the repository root.
 
-| Script           | What it does                                                                         |
-| ---------------- | ------------------------------------------------------------------------------------ |
-| `npm run dev`    | Starts the API with `node --watch` (port 4000) and Vite (port 5173, proxies `/api`). |
-| `npm run seed`   | **Drops** the database and seeds users, policy v1, content, reports and a decision.  |
-| `npm run build`  | Builds the React app into `client/dist`.                                             |
-| `npm start`      | Starts the API. With `NODE_ENV=production` it also serves `client/dist`.             |
-| `npm test`       | Server tests, then client tests.                                                     |
-| `npm run lint`   | ESLint plus the Prettier format check.                                               |
-| `npm run format` | Formats the code with Prettier.                                                      |
+| Script           | What it does                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`    | One command for both: starts the API (port 4000), waits until it is healthy, then starts Vite (port 5173, proxies `/api`). |
+| `npm run seed`   | **Drops** the database and seeds users, policy v1, content, reports and a decision.                                        |
+| `npm run build`  | Builds the React app into `client/dist`.                                                                                   |
+| `npm start`      | Starts the API. With `NODE_ENV=production` it also serves `client/dist`.                                                   |
+| `npm test`       | Server tests, then client tests.                                                                                           |
+| `npm run lint`   | ESLint plus the Prettier format check.                                                                                     |
+| `npm run format` | Formats the code with Prettier.                                                                                            |
 
 ---
 
@@ -511,7 +512,7 @@ Responses include the standard `RateLimit` headers. Rate limits are turned off w
 | POST   | `/api/posts`                   | author                              | Create post                           |
 | POST   | `/api/posts/:id/comments`      | author                              | Create comment                        |
 | POST   | `/api/content/:id/reports`     | any logged-in user                  | Report a post or comment              |
-| GET    | `/api/content/:id/history`     | content author or moderator         | Full moderation history               |
+| GET    | `/api/content/:id/history`     | content author, moderators, admin   | Full moderation history               |
 | GET    | `/api/me/content`              | author                              | Own content, decisions, appealability |
 | GET    | `/api/cases`                   | moderator, senior                   | Moderation queue                      |
 | GET    | `/api/cases/:id`               | moderator, senior                   | Case detail                           |
@@ -728,9 +729,11 @@ Reports a post or comment. Each user can report an item **only once**.
 **Errors:** `400 VALIDATION_FAILED` (bad reason, or _"You have already reported this content."_),
 `404 NOT_FOUND`, `429 RATE_LIMITED`.
 
-#### `GET /api/content/:id/history` — content author or moderator
+#### `GET /api/content/:id/history` — content author, moderators, admin
 
-The full moderation history of one item.
+The full moderation history of one item. For moderators and admins, each analysis also carries
+`ai: { status, model, latencyMs, failure }`, where `failure` is a plain-language reason when the AI review did
+not produce a result (for example "The AI service was overloaded (503). Re-analyse later.").
 
 **Response `200`:**
 
@@ -769,7 +772,9 @@ The full moderation history of one item.
 
 **Privacy for authors (non-moderators):**
 
-- `analyses` contain only `_id`, `caseId`, `policyVersion` and `createdAt`. The findings are hidden.
+- `analyses` contain only `_id`, `caseId`, `policyVersion` and `createdAt`. The findings are hidden, and
+  `analysis.*` audit events have their `after` payload removed, so the AI's proposal is never shown to authors.
+- `appeals` omit the internal AI summary and the assigned reviewer.
 - `report.created` audit events have the reporter removed. The author sees that a report happened, never who
   made it.
 
@@ -964,7 +969,7 @@ The example below is a real Gemini analysis of the seeded threat comment.
   "aiRun": {
     "_id": "...",
     "purpose": "classify",
-    "model": "gemini-3.8-flash",
+    "model": "gemini-3.5-flash-lite",
     "promptVersion": "classify-v1",
     "policyVersion": 1,
     "status": "ok",
@@ -1516,13 +1521,19 @@ threshold to 2, adds appearance-mocking to `HAR-1` and adds `IMP-1` (impersonati
 ```
 AI_PROVIDER=gemini
 GEMINI_API_KEY=<your key>
-GEMINI_MODEL=gemini-3.8-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 AI_TIMEOUT_MS=60000
 AI_CONCURRENCY=1
 ```
 
-A review call typically takes 5–20 seconds and uses about 1,200 input and 250 output tokens. The free tier
-allows about 5 requests per minute, which is why the seed script uses the mock by default. Google retires
+A review call typically takes 2–20 seconds and uses about 1,200 input and 250 output tokens.
+
+**Choosing a model.** Free-tier quotas are counted per model and per day, and some are very small:
+`gemini-3.8-flash` allows only 20 requests per day, which a single seed run plus a few posts can use up.
+`gemini-3.5-flash-lite` has its own quota, answers in a few seconds, and returns valid structured reviews,
+so it is the default here. A 429 that mentions `PerDay` means the daily quota for that model is used up:
+switch `GEMINI_MODEL` or wait for the reset. The seed script uses the mock by default for the same reason.
+Google retires
 older models for new keys. If you get a `404 ... is no longer available`, put the model the error message
 names in `GEMINI_MODEL`. If a call fails (for example a 429 from the free tier's per-minute limit), the case
 falls back to rule findings only and is marked _AI review unavailable_. It is never auto-cleared. A moderator
@@ -1548,18 +1559,18 @@ failure path:
 A React single-page app in `client/`. In development, Vite proxies `/api` to port 4000. In production,
 Express serves `client/dist` from the same origin, so there is no CORS.
 
-| Path                   | Page                                                                       | Roles                           |
-| ---------------------- | -------------------------------------------------------------------------- | ------------------------------- |
-| `/login`               | Login                                                                      | public                          |
-| `/`                    | Feed (post, comment, report)                                               | all                             |
-| `/me`                  | My content and appeals                                                     | author                          |
-| `/content/:id/history` | Moderation history                                                         | author of the item, moderators  |
-| `/queue`               | Moderation queue (filters)                                                 | moderator, senior, admin (read) |
-| `/cases/:id`           | Case detail: highlighted evidence, findings, recommendation, decision form | moderator, senior, admin (read) |
-| `/appeals`             | Appeals queue                                                              | senior, admin                   |
-| `/appeals/:id`         | Appeal review (3 panels and resolve form)                                  | moderator, senior, admin        |
-| `/policy`              | Policy versions, diff, publish (admin)                                     | all                             |
-| `/audit`               | Audit log search                                                           | moderator, senior, admin (read) |
+| Path                   | Page                                                                                                                 | Roles                                 |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `/login`               | Login                                                                                                                | public                                |
+| `/`                    | Feed (post, comment, report)                                                                                         | all                                   |
+| `/me`                  | My content and appeals                                                                                               | author                                |
+| `/content/:id/history` | Per case: AI review (staff) or plain status (author), original decision, appeal evidence, final outcome, audit trail | author of the item, moderators, admin |
+| `/queue`               | Moderation queue (filters)                                                                                           | moderator, senior, admin (read)       |
+| `/cases/:id`           | Case detail: highlighted evidence, findings, recommendation, decision form                                           | moderator, senior, admin (read)       |
+| `/appeals`             | Appeals queue                                                                                                        | senior, admin                         |
+| `/appeals/:id`         | Appeal review (3 panels and resolve form)                                                                            | moderator, senior, admin              |
+| `/policy`              | Policy versions, diff, publish from an in-browser JSON editor (admin)                                                | all                                   |
+| `/audit`               | Audit log search                                                                                                     | moderator, senior, admin (read)       |
 
 The navigation adapts to the role. A `409` error shows **Reload** instead of **Retry**, because the data
 changed on the server.
@@ -1572,23 +1583,24 @@ changed on the server.
 npm test
 ```
 
-- **Server tests** (57) run against an **in-memory MongoDB replica set** (`mongodb-memory-server`), so they
+- **Server tests** (61) run against an **in-memory MongoDB replica set** (`mongodb-memory-server`), so they
   never touch your Atlas database. Each test file gets its own database. `AI_PROVIDER` is forced to `mock`,
   so tests use no Gemini quota.
 - **Client tests** (9) run in jsdom with Testing Library.
 
-| Suite                                                | Covers                                                                                                                               |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `api.test.js`                                        | Health, 404 shape, 401/403, admin read-only, login cookie, body validation, background analysis, report joining and priority, reopen |
-| `decisions.test.js`                                  | Approve, reject, modify, rationale rule, double-decide 409, `STALE_ANALYSIS`, audit for every decision                               |
-| `appeals.test.js`                                    | Routing, `SAME_REVIEWER`, author-only/once/action ≠ none, statement length, overturn restores visibility                             |
-| `policy.test.js`                                     | Exactly one active version, admin-only publish, invalid file, v2 link threshold, re-evaluation scope, idempotency, diff              |
-| `hardRule.test.js`                                   | `HUMAN_REQUIRED`, analysis never changes visibility, AI cannot import `decisionService`                                              |
-| `aiFailure.test.js`                                  | Repair retry, prompt injection, auto-clear                                                                                           |
-| `audit.test.js`                                      | Updates and deletes on audit events throw                                                                                            |
-| `geminiRetry.test.js`                                | Back-off delay from Gemini's retry hint, exponential fallback, 60 s cap                                                              |
-| `rules.test.js`, `combine.test.js`, `verify.test.js` | Pure unit tests of rules, recommendation logic and AI verification                                                                   |
-| `client/test/*`                                      | `DecisionForm`, `HighlightedText`, `QueryState`                                                                                      |
+| Suite                                                | Covers                                                                                                                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `api.test.js`                                        | Health, 404 shape, 401/403, admin read-only, history views per role, login cookie, body validation, background analysis, report joining and priority, reopen |
+| `decisions.test.js`                                  | Approve, reject, modify, rationale rule, double-decide 409, `STALE_ANALYSIS`, audit for every decision                                                       |
+| `appeals.test.js`                                    | Routing, `SAME_REVIEWER`, author-only/once/action ≠ none, statement length, overturn restores visibility                                                     |
+| `policy.test.js`                                     | Exactly one active version, admin-only publish, invalid file, v2 link threshold, re-evaluation scope, idempotency, diff                                      |
+| `hardRule.test.js`                                   | `HUMAN_REQUIRED`, analysis never changes visibility, AI cannot import `decisionService`                                                                      |
+| `aiFailure.test.js`                                  | Repair retry, prompt injection, auto-clear                                                                                                                   |
+| `audit.test.js`                                      | Updates and deletes on audit events throw                                                                                                                    |
+| `aiRun.test.js`                                      | Plain-language AI failure reasons (503, 429, API key, timeout, invalid output)                                                                               |
+| `geminiRetry.test.js`                                | Back-off delay from Gemini's retry hint, exponential fallback, 60 s cap                                                                                      |
+| `rules.test.js`, `combine.test.js`, `verify.test.js` | Pure unit tests of rules, recommendation logic and AI verification                                                                                           |
+| `client/test/*`                                      | `DecisionForm`, `HighlightedText`, `QueryState`                                                                                                              |
 
 ---
 
@@ -1647,7 +1659,7 @@ API base URL to configure, and the session cookie just works.
    | `JWT_SECRET`         | A long random string, e.g. the output of `openssl rand -hex 32`           |
    | `AI_PROVIDER`        | `gemini`, or `mock` for a demo without an API key                         |
    | `GEMINI_API_KEY`     | Your Google AI Studio key                                                 |
-   | `GEMINI_MODEL`       | `gemini-3.8-flash`                                                        |
+   | `GEMINI_MODEL`       | `gemini-3.5-flash-lite`                                                   |
    | `AI_TIMEOUT_MS`      | `60000`                                                                   |
    | `AI_CONCURRENCY`     | `1`                                                                       |
    | `VITE_DEMO_PASSWORD` | Optional. `1234` enables one-click demo logins. It is read at build time. |
@@ -1701,7 +1713,7 @@ Express app and Vite with an `/api` proxy, so the routing matches production.
 - Role-based access for 5 roles, including read-only oversight for admins.
 - AI failure handling: timeouts, 429/5xx back-off, invalid output with one repair retry, fallback to rules.
 - Gemini integration plus a deterministic offline mock for tests and seeding.
-- 66 automated tests, ESLint + Prettier, GitHub Actions CI, and Vercel deployment config.
+- 70 automated tests, ESLint + Prettier, GitHub Actions CI, and Vercel deployment config.
 
 ### Excluded (deliberately out of scope)
 
@@ -1725,7 +1737,8 @@ Express app and Vite with an `/api` proxy, so the routing matches production.
 - **Vercel function time limit.** Background work after a request is capped by the function's `maxDuration`
   (300 s in `vercel.json`). Publishing a policy with many unresolved cases on the Gemini free tier can exceed
   that; cases left over stay unresolved and can be re-analysed.
-- **Gemini free tier.** About 5 requests per minute, plus daily caps and occasional `503` overload errors. The
+- **Gemini free tier.** Small per-minute and per-day quotas per model (only 20 per day for
+  `gemini-3.8-flash`), plus occasional `503` overload errors. The
   client backs off and retries, but heavy use still falls back to "AI review unavailable" (rule findings only,
   always sent to a human).
 - **Rate limits are per instance.** `express-rate-limit` keeps counts in memory, so on Vercel each instance

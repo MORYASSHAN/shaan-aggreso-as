@@ -125,4 +125,30 @@ describe('API basics', () => {
     const queue = await mod.get('/api/cases');
     expect(queue.body.items.map((c) => c._id)).toContain(created.body.caseId);
   });
+
+  it('history shows staff the full AI review and failure reason, and shows authors no AI findings', async () => {
+    const author = await loginAs(users.author);
+    const created = await author
+      .post('/api/posts')
+      .send({ body: '[mock:error] Lately I just want to disappear.' });
+    await settle();
+
+    const admin = await loginAs(users.admin);
+    const staff = await admin.get(`/api/content/${created.body._id}/history`);
+    expect(staff.status).toBe(200);
+    const [analysis] = staff.body.analyses;
+    expect(analysis.ruleFindings.map((f) => f.clauseCode)).toContain('SH-1');
+    expect(analysis.recommendation.needsHumanReasons.length).toBeGreaterThan(0);
+    expect(analysis.ai).toMatchObject({ status: 'error', failure: expect.any(String) });
+
+    const own = await author.get(`/api/content/${created.body._id}/history`);
+    expect(own.status).toBe(200);
+    expect(own.body.analyses[0]).not.toHaveProperty('ruleFindings');
+    expect(own.body.analyses[0]).not.toHaveProperty('ai');
+    const aiEvents = own.body.audit.filter((e) => e.action.startsWith('analysis.'));
+    expect(aiEvents.length).toBeGreaterThan(0);
+    expect(aiEvents.every((e) => e.after === null)).toBe(true);
+    const stranger = await (await loginAs(users.author2)).get(`/api/content/${created.body._id}/history`);
+    expect(stranger.status).toBe(403);
+  });
 });
