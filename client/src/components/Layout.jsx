@@ -98,6 +98,15 @@ export function Layout() {
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-10 sm:px-6">
         <Outlet />
       </main>
+
+      <a
+        href="https://moryasshan.vercel.app"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-4 right-4 z-40 inline-flex h-8 items-center gap-1.5 rounded-full border border-line bg-black/70 px-3.5 font-mono text-[11px] uppercase tracking-[0.08em] text-muted shadow-[inset_0_1px_0_rgb(255_255_255/0.05)] backdrop-blur-md transition-colors duration-150 hover:border-line-strong hover:text-fg"
+      >
+        Portfolio <span aria-hidden="true">↗</span>
+      </a>
     </div>
   );
 }
