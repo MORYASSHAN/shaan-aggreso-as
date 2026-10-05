@@ -2,7 +2,7 @@ import { loadEnvFile } from './loadEnv.js';
 
 loadEnvFile();
 
-// config.js validates the environment on import; refuse to start with a clear message if it is wrong.
+// config.js validates the environment on import and throws if it is invalid.
 let config;
 try {
   ({ config } = await import('./config.js'));

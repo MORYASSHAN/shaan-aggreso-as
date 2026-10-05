@@ -16,7 +16,7 @@ export function notFound(req, _res, next) {
   next(appError(ERROR.NOT_FOUND, `No route for ${req.method} ${req.originalUrl}.`));
 }
 
-// One place turns every error into { error: { code, message, requestId } }.
+// Every error response has the shape { error: { code, message, requestId } }.
 export function errorHandler(err, req, res, _next) {
   const known = toAppError(err);
   if (!known) {

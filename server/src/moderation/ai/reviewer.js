@@ -46,10 +46,7 @@ async function callAndValidate(client, { system, user, meta }, usage) {
   return { invalid: issues };
 }
 
-/**
- * One AI review: build input, call, validate (+1 repair), verify, and log an aiRuns record either way.
- * Returns { ok: true, review, aiRunId } or { ok: false, status, aiRunId }. It never throws for AI failures.
- */
+/** Always logs an aiRuns record and never throws for AI failures: { ok, review | status, aiRunId }. */
 export async function reviewContent({ policy, content, parent, reports, ruleFindings, history, requestId }) {
   const client = getAiClient();
   const usage = { model: client.model, inputTokens: 0, outputTokens: 0 };

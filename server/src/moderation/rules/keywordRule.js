@@ -1,6 +1,6 @@
 import { ruleFinding } from './finding.js';
 
-// Clause keywords from the active policy: a finding with the exact match and its character positions.
+// Findings carry the exact match and its character positions.
 export function keywordRule(text, policy) {
   const findings = [];
   const lower = text.toLowerCase();

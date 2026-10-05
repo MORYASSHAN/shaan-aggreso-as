@@ -6,10 +6,7 @@ import { AiTimeoutError } from './errors.js';
 import { APPEAL_PROMPT_VERSION, APPEAL_SYSTEM_PROMPT, appealUserMessage } from './prompts.js';
 import { AppealSummaryOutput, SUBMIT_APPEAL_SUMMARY_TOOL } from './schema.js';
 
-/**
- * Optional appeal assistant (appeal-summary-v1). It returns a neutral summary and new points only:
- * no uphold/overturn vote, so the appeal outcome stays fully human. Returns null if the AI fails.
- */
+// Neutral summary and new points only, never an uphold/overturn vote. Returns null if the AI fails.
 export async function summarizeAppeal({
   content,
   decision,

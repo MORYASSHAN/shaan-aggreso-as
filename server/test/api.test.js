@@ -32,6 +32,27 @@ describe('API basics', () => {
     expect(await AuditEvent.countDocuments({ action: AUDIT.AUTH_DENIED })).toBe(1);
   });
 
+  it('admins can read the queue, cases and audit log, but cannot decide, reopen or re-analyse', async () => {
+    const author = await loginAs(users.author);
+    await author.post('/api/posts').send({ body: 'You are a worthless idiot.' });
+    await settle();
+    const kase = await Case.findOne().lean();
+
+    const admin = await loginAs(users.admin);
+    expect((await admin.get('/api/cases')).status).toBe(200);
+    expect((await admin.get(`/api/cases/${kase._id}`)).status).toBe(200);
+    expect((await admin.get('/api/audit')).status).toBe(200);
+
+    const decide = await admin.post(`/api/cases/${kase._id}/decisions`).send({
+      outcome: 'approved',
+      analysisId: String(kase.currentAnalysisId),
+    });
+    expect(decide.status).toBe(403);
+    expect(decide.body.error.code).toBe('FORBIDDEN');
+    expect((await admin.post(`/api/cases/${kase._id}/reanalyze`)).status).toBe(403);
+    expect((await admin.post(`/api/cases/${kase._id}/reopen`)).status).toBe(403);
+  });
+
   it('wrong password gets 401 without saying which part was wrong', async () => {
     const res = await request(app)
       .post('/api/auth/login')

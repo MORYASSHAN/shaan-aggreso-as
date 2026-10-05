@@ -2,10 +2,7 @@ import { EmptyState } from './EmptyState.jsx';
 import { ErrorBanner } from './ErrorBanner.jsx';
 import { SkeletonRows } from './Skeleton.jsx';
 
-/**
- * The loading / failure / empty states every screen shares.
- * Renders children(data) only when there is something to show.
- */
+/** Renders children(data) only once there is data to show. */
 export function QueryState({ query, isEmpty, empty, loading, children }) {
   if (query.isLoading) return loading ?? <SkeletonRows />;
   if (query.isError) {

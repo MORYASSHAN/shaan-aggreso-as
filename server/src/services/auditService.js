@@ -18,10 +18,7 @@ function toAuditActor(actor) {
   return { type: ACTOR_TYPE.USER, id: actor.id, role: actor.role ?? null };
 }
 
-/**
- * The only writer of audit events, and it only inserts.
- * Pass the transaction session so the event commits (or rolls back) with the change it describes.
- */
+// Pass the transaction session so the event commits or rolls back with the change it describes.
 export async function record({ actor, action, entity, before, after, policyVersion, requestId }, session) {
   const [event] = await AuditEvent.create(
     [

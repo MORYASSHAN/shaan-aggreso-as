@@ -14,14 +14,13 @@ function limiter({ windowMs, limit, message }) {
   });
 }
 
-// Login attempts, per IP.
 export const authLimiter = limiter({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   message: 'Too many login attempts. Try again in a few minutes.',
 });
 
-// Creating content, reporting and re-analysing all call the AI, so they are protected from abuse.
+// Creating content, reporting and re-analysing all trigger AI calls.
 export const aiWriteLimiter = limiter({
   windowMs: 60 * 1000,
   limit: 30,

@@ -1,10 +1,30 @@
+import dns from 'node:dns';
 import mongoose from 'mongoose';
+import { config } from './config.js';
 import { logger } from './logger.js';
 import * as models from './models/index.js';
 
-export async function connectDb(uri) {
+// On some Windows machines (VPNs, virtual adapters) Node's resolver falls back to 127.0.0.1 and every
+// mongodb+srv:// lookup fails with ECONNREFUSED, while the OS resolver works. Retry once via DNS_FALLBACK.
+function isSrvLookupFailure(err) {
+  return err?.syscall === 'querySrv' && ['ECONNREFUSED', 'ETIMEOUT', 'ESERVFAIL'].includes(err.code);
+}
+
+export async function openConnection(uri) {
   mongoose.set('strictQuery', true);
-  await mongoose.connect(uri);
+  try {
+    await mongoose.connect(uri);
+  } catch (err) {
+    const servers = config.DNS_FALLBACK;
+    if (!isSrvLookupFailure(err) || !servers.length) throw err;
+    logger.warn({ servers, code: err.code }, 'SRV lookup failed; retrying with fallback DNS servers');
+    dns.setServers(servers);
+    await mongoose.connect(uri);
+  }
+}
+
+export async function connectDb(uri) {
+  await openConnection(uri);
   await ensureCollections();
   logger.info({ db: mongoose.connection.name }, 'database connected');
 }
@@ -25,7 +45,6 @@ export function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
-/** Runs fn inside one Mongo transaction: all writes succeed or none do. */
 export async function withTransaction(fn) {
   const session = await mongoose.startSession();
   try {

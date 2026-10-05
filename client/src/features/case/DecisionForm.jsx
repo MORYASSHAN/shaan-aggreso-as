@@ -26,7 +26,6 @@ function successMessage(decision) {
   return `Decision saved. ${what}${under}, policy v${decision.policyVersion}.`;
 }
 
-/** The human decision. Buttons say exactly what the human is doing. */
 export function DecisionForm({ caseId, analysis, clauses, recommendedClauses }) {
   const qc = useQueryClient();
   const toast = useToast();

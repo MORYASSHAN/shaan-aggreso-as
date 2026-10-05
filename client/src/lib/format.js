@@ -26,7 +26,7 @@ export function humanize(value) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** The visible verb for what a human is doing, e.g. "Approve: label content". */
+// e.g. "Approve: label content"
 export function actionPhrase(action) {
   return action === 'none' ? 'take no action' : `${action} content`;
 }

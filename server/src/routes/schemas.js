@@ -12,8 +12,6 @@ import {
   TRIGGER,
 } from '../constants.js';
 
-// Request body and query schemas. Input hygiene happens here, before any service runs.
-
 export const objectId = z
   .string()
   .refine((v) => mongoose.isValidObjectId(v), { message: 'is not a valid id' });

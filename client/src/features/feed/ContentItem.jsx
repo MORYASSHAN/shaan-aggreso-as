@@ -9,7 +9,7 @@ const VISIBILITY_NOTE = {
   removed: { tone: 'danger', text: 'Removed' },
 };
 
-/** One post or comment. Removed items only reach moderators, shown greyed out. */
+// Removed items are only ever sent to moderators.
 export function ContentItem({ item, viewer, children }) {
   const [reporting, setReporting] = useState(false);
   const note = VISIBILITY_NOTE[item.visibility];

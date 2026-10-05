@@ -16,7 +16,7 @@ export const AI_IMPORT_RULE = {
   ],
 };
 
-// Components used only in JSX (<Badge />) count as used, so no-unused-vars stays accurate in .jsx files.
+// Count components used only in JSX as used, so no-unused-vars works in .jsx files.
 const jsxUsesVars = {
   create(context) {
     const markUsed = (node) => {

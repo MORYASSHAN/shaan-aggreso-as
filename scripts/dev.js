@@ -1,4 +1,4 @@
-// npm run dev — starts the API (port 4000) and the Vite dev server (port 5173) together.
+// Runs the API (port 4000) and the Vite dev server (port 5173) together.
 import { spawn } from 'node:child_process';
 
 const children = ['server', 'client'].map((workspace) =>

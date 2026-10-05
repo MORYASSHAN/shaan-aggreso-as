@@ -66,7 +66,6 @@ export async function listQueue({ status, priority, trigger, policyVersion, page
   return { items, total, page, limit };
 }
 
-/** Case detail: content, context, the current analysis and older analyses. */
 export async function getCase(caseId) {
   const kase = await Case.findById(caseId).lean();
   if (!kase) throw appError(ERROR.NOT_FOUND, 'Case not found.');

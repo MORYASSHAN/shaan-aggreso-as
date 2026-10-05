@@ -1,4 +1,3 @@
-/** Page title in the serif display face, with a mono eyebrow and an optional action on the right. */
 export function PageHeader({ eyebrow, title, description, action }) {
   return (
     <header className="mb-8 flex flex-wrap items-end justify-between gap-4 fade-in">

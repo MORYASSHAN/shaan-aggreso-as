@@ -18,11 +18,8 @@ export function excerpt(text, max = 140) {
   return flat.length > max ? `${flat.slice(0, max)}…` : flat;
 }
 
-/**
- * Lowercases and collapses whitespace, keeping a map from each normalised
- * character back to its index in the original text, so a quote found in the
- * normalised text can be highlighted at its real position.
- */
+// Keeps a map from each normalised character back to its original index, so a quote
+// found in normalised text can be highlighted at its real position.
 export function normalizeWithMap(text) {
   let normalized = '';
   const map = [];

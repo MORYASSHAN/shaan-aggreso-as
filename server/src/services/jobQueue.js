@@ -1,9 +1,7 @@
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 
-// A small in-process queue: an array plus a worker loop, at most AI_CONCURRENCY jobs at a time,
-// so requests return fast while analysis runs in the background.
-// A production system would use a durable job queue instead (see README).
+// In-process and not durable: at most AI_CONCURRENCY jobs at a time, so requests return while analysis runs.
 const queue = [];
 let active = 0;
 let idleWaiters = [];

@@ -3,7 +3,6 @@ import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { ToastProvider } from '../src/components/Toast.jsx';
 
-/** Renders a component with the same providers the app uses. */
 export function renderWithProviders(ui) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },

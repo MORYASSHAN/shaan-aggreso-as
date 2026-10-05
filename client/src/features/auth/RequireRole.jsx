@@ -2,7 +2,6 @@ import { Navigate, useLocation } from 'react-router';
 import { EmptyState } from '../../components/EmptyState.jsx';
 import { useSession } from './session.js';
 
-/** Sends logged-out visitors to /login and explains when a role can't open a screen. */
 export function RequireRole({ roles, children }) {
   const { data: user } = useSession();
   const location = useLocation();

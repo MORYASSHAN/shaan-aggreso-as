@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
 import { Arrow, Button } from '../../components/Button.jsx';
 import { ErrorBanner } from '../../components/ErrorBanner.jsx';
@@ -15,7 +15,7 @@ const DEMO_ACCOUNTS = [
   { email: 'admin@example.com', role: ROLES.ADMIN, name: 'Ari' },
 ];
 
-// Optional: when set at build time, the demo buttons log in with one click. Otherwise they fill the email.
+// When set at build time the demo buttons log straight in; otherwise they only fill the email.
 const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD;
 
 export function LoginPage() {
@@ -26,6 +26,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [touched, setTouched] = useState(false);
+  const passwordRef = useRef(null);
 
   if (user) return <Navigate to={homeFor(user.role)} replace />;
 
@@ -49,7 +50,7 @@ export function LoginPage() {
   const pickDemo = (account) => {
     setEmail(account.email);
     if (DEMO_PASSWORD) submit({ email: account.email, password: DEMO_PASSWORD });
-    else document.getElementById('login-password')?.focus();
+    else passwordRef.current?.focus();
   };
 
   return (
@@ -78,7 +79,7 @@ export function LoginPage() {
           {(a11y) => (
             <Input
               {...a11y}
-              id="login-password"
+              ref={passwordRef}
               type="password"
               autoComplete="current-password"
               value={password}

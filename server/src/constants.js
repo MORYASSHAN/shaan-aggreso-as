@@ -1,5 +1,3 @@
-// Every enum in the app lives here. Never type a status or role as a raw string elsewhere.
-
 export const ROLES = Object.freeze({
   AUTHOR: 'author',
   MEMBER: 'member',
@@ -8,6 +6,8 @@ export const ROLES = Object.freeze({
   ADMIN: 'admin',
 });
 export const MODERATOR_ROLES = Object.freeze([ROLES.MODERATOR, ROLES.SENIOR]);
+// Admins can read the queue, cases and audit log, but only moderators decide.
+export const OVERSIGHT_ROLES = Object.freeze([...MODERATOR_ROLES, ROLES.ADMIN]);
 
 export const CONTENT_TYPE = Object.freeze({ POST: 'post', COMMENT: 'comment' });
 

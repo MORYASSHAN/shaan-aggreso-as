@@ -1,6 +1,5 @@
 import { ROLES } from './constants.js';
 
-// The nav changes with the user's role. Every role can read the feed and the policy.
 const LINKS = {
   feed: { to: '/', label: 'Feed' },
   mine: { to: '/me', label: 'My content' },
@@ -15,7 +14,7 @@ const BY_ROLE = {
   [ROLES.MEMBER]: ['feed', 'policy'],
   [ROLES.MODERATOR]: ['queue', 'feed', 'policy', 'audit'],
   [ROLES.SENIOR]: ['queue', 'appeals', 'feed', 'policy', 'audit'],
-  [ROLES.ADMIN]: ['policy', 'appeals', 'feed'],
+  [ROLES.ADMIN]: ['queue', 'appeals', 'policy', 'audit', 'feed'],
 };
 
 export function linksFor(role) {

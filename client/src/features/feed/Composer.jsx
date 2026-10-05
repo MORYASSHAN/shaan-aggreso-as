@@ -4,7 +4,6 @@ import { ErrorBanner } from '../../components/ErrorBanner.jsx';
 import { Field, TextArea } from '../../components/Field.jsx';
 import { LIMITS } from '../../lib/constants.js';
 
-/** Post or comment box. Validates like the server: not empty, at most 5,000 characters. */
 export function Composer({ placeholder, submitLabel, mutation, onDone, compact = false }) {
   const [body, setBody] = useState('');
   const [touched, setTouched] = useState(false);

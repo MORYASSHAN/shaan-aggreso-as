@@ -14,7 +14,7 @@ import { FeedPage } from './features/feed/FeedPage.jsx';
 import { MyContentPage } from './features/me/MyContentPage.jsx';
 import { PolicyPage } from './features/policy/PolicyPage.jsx';
 import { QueuePage } from './features/queue/QueuePage.jsx';
-import { MODERATOR_ROLES, ROLES } from './lib/constants.js';
+import { MODERATOR_ROLES, OVERSIGHT_ROLES, ROLES } from './lib/constants.js';
 
 const guard = (element, roles) => <RequireRole roles={roles}>{element}</RequireRole>;
 
@@ -36,12 +36,12 @@ export function App() {
         <Route path="/" element={guard(<FeedPage />)} />
         <Route path="/me" element={guard(<MyContentPage />, [ROLES.AUTHOR])} />
         <Route path="/content/:id/history" element={guard(<HistoryPage />)} />
-        <Route path="/queue" element={guard(<QueuePage />, MODERATOR_ROLES)} />
-        <Route path="/cases/:id" element={guard(<CaseDetailPage />, MODERATOR_ROLES)} />
+        <Route path="/queue" element={guard(<QueuePage />, OVERSIGHT_ROLES)} />
+        <Route path="/cases/:id" element={guard(<CaseDetailPage />, OVERSIGHT_ROLES)} />
         <Route path="/appeals" element={guard(<AppealsQueuePage />, [ROLES.SENIOR, ROLES.ADMIN])} />
         <Route path="/appeals/:id" element={guard(<AppealReviewPage />, [...MODERATOR_ROLES, ROLES.ADMIN])} />
         <Route path="/policy" element={guard(<PolicyPage />)} />
-        <Route path="/audit" element={guard(<AuditPage />, MODERATOR_ROLES)} />
+        <Route path="/audit" element={guard(<AuditPage />, OVERSIGHT_ROLES)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

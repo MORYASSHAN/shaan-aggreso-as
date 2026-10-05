@@ -4,7 +4,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Read VITE_* variables from the repo-root .env, next to the server's settings.
+  // VITE_* variables live in the repo-root .env alongside the server settings.
   envDir: '..',
   server: {
     port: 5173,

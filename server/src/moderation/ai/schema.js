@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Zod mirror of the submit_review tool's input schema. The AI's output is never trusted until it passes this.
+// Zod mirror of submit_review's input schema; AI output is untrusted until it passes.
 const Finding = z.object({
   clause_code: z.string(),
   evidence: z.array(z.object({ quote: z.string().min(1) })),

@@ -6,7 +6,6 @@ import { PageHeader, Section } from '../../components/Page.jsx';
 import { QueryState } from '../../components/QueryState.jsx';
 import { Timeline } from './Timeline.jsx';
 
-/** Moderation history of one item. Authors see their own; moderators see any. */
 export function HistoryPage() {
   const { id } = useParams();
   const history = useQuery({ queryKey: ['history', id], queryFn: () => contentApi.history(id) });

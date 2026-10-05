@@ -16,10 +16,7 @@ function similarity(a, b) {
   return shared / new Set([...left, ...right]).size;
 }
 
-/**
- * Same author, near-identical text in the last 10 minutes → SPAM-1.
- * The caller passes the author's recent texts so this rule stays pure.
- */
+// The caller passes the author's recent texts so this rule stays pure.
 export function repeatRule(text, policy, { recentTexts = [] } = {}) {
   const clause = findClause(policy, 'SPAM-1');
   if (!clause || !text.trim()) return [];

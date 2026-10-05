@@ -1,6 +1,5 @@
 import { useId } from 'react';
 
-/** A labelled field with an inline message underneath for validation errors. */
 export function Field({ label, error, hint, children, className = '' }) {
   const id = useId();
   const messageId = `${id}-message`;

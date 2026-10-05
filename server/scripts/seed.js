@@ -1,21 +1,26 @@
-// npm run seed — resets the demo database: 5 users, policy v1, ~15 posts and comments,
-// 2 user reports and one already-decided case so the appeal flow can be shown right away.
+// npm run seed — resets the demo database: 5 users (password DEMO_PASSWORD, default 1234), policy v1,
+// ~15 posts and comments, 2 user reports and one already-decided case so the appeal flow can be shown.
 import { loadEnvFile } from '../src/loadEnv.js';
 
 loadEnvFile();
 
-const password = process.env.DEMO_PASSWORD;
-if (!password || password.length < 8) {
-  console.error('Set DEMO_PASSWORD (at least 8 characters) in .env before seeding.');
+// Demo-only credential shared by every seeded account. Override it with DEMO_PASSWORD.
+const password = process.env.DEMO_PASSWORD?.replace(/\s+#.*$/, '').trim() || '1234';
+if (password.length < 4) {
+  console.error('DEMO_PASSWORD must be at least 4 characters.');
   process.exit(1);
 }
+
+// Seeding uses the deterministic mock unless SEED_AI_PROVIDER=gemini, so it never hits Gemini's free-tier
+// quota (5 requests/minute). Content created later in the app uses AI_PROVIDER as usual.
+process.env.AI_PROVIDER = process.env.SEED_AI_PROVIDER?.replace(/\s+#.*$/, '').trim() || 'mock';
 
 const [{ config }, { default: mongoose }, { default: bcrypt }] = await Promise.all([
   import('../src/config.js'),
   import('mongoose'),
   import('bcryptjs'),
 ]);
-const { ensureCollections } = await import('../src/db.js');
+const { ensureCollections, openConnection } = await import('../src/db.js');
 const { ACTOR_TYPE, CONTENT_TYPE, DECISION_OUTCOME, ROLES } = await import('../src/constants.js');
 const { Case, User } = await import('../src/models/index.js');
 const policyService = await import('../src/services/policyService.js');
@@ -31,7 +36,7 @@ const USERS = [
   { key: 'admin', name: 'Ari Admin', email: 'admin@example.com', role: ROLES.ADMIN },
 ];
 
-// Each post covers one case reviewers will want to see. Comments reference their post by key.
+// One post per moderation scenario; comments reference their post by key.
 const POSTS = [
   {
     key: 'run',
@@ -150,7 +155,7 @@ async function seedReports(users, ids) {
   await onIdle();
 }
 
-// A real human decision by the moderator, made through the same guarded path the UI uses.
+// Goes through the same guarded decision path as the UI.
 async function seedDecision(users, ids) {
   const kase = await Case.findOne({ contentId: ids.decided }).lean();
   await decisionService.applyDecision({
@@ -168,7 +173,7 @@ async function seedDecision(users, ids) {
 }
 
 async function main() {
-  await mongoose.connect(config.MONGODB_URI);
+  await openConnection(config.MONGODB_URI);
   await mongoose.connection.dropDatabase();
   await ensureCollections();
   const users = await seedUsers();
@@ -181,7 +186,9 @@ async function main() {
     `Seeded ${USERS.length} users, policy v1, ${POSTS.length + COMMENTS.length} posts and comments.`,
   );
   console.log('Cases by status:', Object.fromEntries(counts.map((c) => [c._id, c.n])));
-  console.log(`Demo accounts: ${USERS.map((u) => u.email).join(', ')} (password from DEMO_PASSWORD)`);
+  console.log(
+    `Demo accounts: ${USERS.map((u) => u.email).join(', ')} (AI used for seeding: ${config.AI_PROVIDER})`,
+  );
 }
 
 try {

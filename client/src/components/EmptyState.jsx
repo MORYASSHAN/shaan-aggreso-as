@@ -1,4 +1,3 @@
-/** A short sentence and the next step. */
 export function EmptyState({ title, children, action }) {
   return (
     <div className="flex flex-col items-center gap-2 px-6 py-14 text-center fade-in">

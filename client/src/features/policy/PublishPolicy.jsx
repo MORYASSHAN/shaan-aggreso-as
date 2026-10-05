@@ -39,7 +39,7 @@ function ReevaluationProgress({ runId }) {
   );
 }
 
-/** Admin publishes a new version from a JSON file. The server validates it and assigns the version number. */
+// The server validates the file and assigns the version number.
 export function PublishPolicy() {
   const qc = useQueryClient();
   const toast = useToast();

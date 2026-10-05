@@ -10,7 +10,6 @@ export function mergeRanges(ranges) {
   return merged;
 }
 
-/** The content with verified evidence highlighted at its exact character positions. */
 export function HighlightedText({ text, ranges }) {
   const parts = [];
   let at = 0;

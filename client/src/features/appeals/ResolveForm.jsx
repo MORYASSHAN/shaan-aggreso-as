@@ -14,7 +14,6 @@ const OUTCOMES = [
   { value: 'modified', title: 'Modify', hint: 'Different action' },
 ];
 
-/** The reviewer decides with no AI vote. A rationale is always required. */
 export function ResolveForm({ appealId, original }) {
   const qc = useQueryClient();
   const toast = useToast();

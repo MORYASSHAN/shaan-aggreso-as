@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ACTIONS, LIMITS } from '../../lib/constants.js';
 
-// Mirrors the server's DecisionBody so the form can say what's wrong before submitting.
+// Mirrors the server's DecisionBody schema.
 export const DecisionFormSchema = z
   .object({
     outcome: z.enum(['approved', 'rejected', 'modified']),

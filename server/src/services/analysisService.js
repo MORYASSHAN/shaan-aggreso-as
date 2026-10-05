@@ -122,10 +122,7 @@ async function saveAnalysis({ kase, policy, ruleFindings, ai, combined, fromVers
   });
 }
 
-/**
- * Runs rules + AI for one case under the active policy and stores a new analysis.
- * It never changes content: only a human decision does that.
- */
+// Never changes content; only a human decision does that.
 export async function analyzeCase(caseId, { fromVersion = null, requestId = null } = {}) {
   const kase = await Case.findById(caseId).lean();
   if (!kase) throw appError(ERROR.NOT_FOUND, 'Case not found.');

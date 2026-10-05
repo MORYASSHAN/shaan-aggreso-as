@@ -3,7 +3,7 @@ import { authApi } from '../../api/resources.js';
 
 export const ME_KEY = ['me'];
 
-/** The logged-in user, or null. A 401 simply means "not logged in". */
+// A 401 just means nobody is logged in, so it resolves to null.
 export function useSession() {
   return useQuery({
     queryKey: ME_KEY,

@@ -6,7 +6,6 @@ function SourceBadge({ finding }) {
   return finding.source === 'rule' ? <Badge tone="info">Rule · {finding.ruleId}</Badge> : <AiLabel />;
 }
 
-/** Exact quotes that are really in the text: rule matches and AI quotes the server verified. */
 function ConfirmedEvidence({ findings }) {
   const withEvidence = findings.filter((f) => f.evidence.length > 0);
   return (
@@ -41,7 +40,6 @@ function ConfirmedEvidence({ findings }) {
   );
 }
 
-/** What the AI infers beyond the words, kept apart from the evidence and labelled as a suggestion. */
 function Interpretation({ findings }) {
   const aiFindings = findings.filter((f) => f.source === 'ai');
   return (

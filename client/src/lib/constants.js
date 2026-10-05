@@ -1,4 +1,4 @@
-// Mirrored from server/src/constants.js so the UI never types a status as a raw string.
+// Mirrors server/src/constants.js.
 
 export const ROLES = {
   AUTHOR: 'author',
@@ -8,6 +8,8 @@ export const ROLES = {
   ADMIN: 'admin',
 };
 export const MODERATOR_ROLES = [ROLES.MODERATOR, ROLES.SENIOR];
+// Admins can read the queue, cases and audit log, but only moderators decide.
+export const OVERSIGHT_ROLES = [...MODERATOR_ROLES, ROLES.ADMIN];
 
 export const ROLE_LABEL = {
   [ROLES.AUTHOR]: 'Author',

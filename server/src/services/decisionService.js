@@ -19,8 +19,7 @@ import { appError } from '../utils/AppError.js';
 import * as auditService from './auditService.js';
 import * as policyService from './policyService.js';
 
-// THE ONLY MODULE THAT CHANGES content.visibility OR RESOLVES AN APPEAL.
-// Every path in here requires a human moderator. AI and system actors are refused.
+// The only module that changes content.visibility or resolves an appeal; AI and system actors are refused.
 
 export function assertHuman(actor) {
   if (actor?.type !== ACTOR_TYPE.USER) {
@@ -206,11 +205,8 @@ async function decideAppeal({ appealId, input, actor, requestId }) {
   });
 }
 
-/**
- * The only function in the codebase that changes content.visibility or resolves an appeal.
- * stage 'initial': decide an awaiting_review case. stage 'appeal': resolve an appeal_pending case.
- * Visibility, decision and audit event are written in one transaction: all succeed or none do.
- */
+// stage 'initial' decides an awaiting_review case; 'appeal' resolves an appeal_pending case.
+// Visibility, decision and audit event are written in one transaction.
 export async function applyDecision({
   caseId,
   appealId,

@@ -31,7 +31,6 @@ function detail(event) {
   return null;
 }
 
-/** A vertical timeline: who did what, when, under which policy version. */
 export function Timeline({ events }) {
   return (
     <ol className="relative flex flex-col">

@@ -7,7 +7,6 @@ import { Field, Input, Select } from '../../components/Field.jsx';
 import { useToast } from '../../components/Toast.jsx';
 import { REPORT_REASONS } from '../../lib/constants.js';
 
-/** Inline report form. One report per user per item; the server says so if you try twice. */
 export function ReportForm({ contentId, onClose }) {
   const toast = useToast();
   const [reasonCode, setReasonCode] = useState('');

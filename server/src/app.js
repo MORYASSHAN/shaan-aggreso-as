@@ -28,7 +28,7 @@ function requestLogger() {
   });
 }
 
-// In production, Express also serves the built React app from the same URL (no CORS).
+// In production Express also serves the built client from the same origin, so no CORS.
 function serveClient(app) {
   if (!existsSync(CLIENT_DIST)) return;
   app.use(express.static(CLIENT_DIST, { index: false }));
@@ -39,7 +39,7 @@ function serveClient(app) {
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
-  // Render sits behind one proxy; this lets rate limiting see the real client IP.
+  // Behind one proxy (Vercel or similar), so rate limiting sees the real client IP.
   app.set('trust proxy', 1);
   app.use(requestLogger());
   app.use(helmet());

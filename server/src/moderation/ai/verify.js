@@ -60,10 +60,7 @@ function allowedAction(proposed, findings, clauses) {
   };
 }
 
-/**
- * Checks every citation and quote before anything is saved. Pure: no database calls.
- * Returns the verified findings, the (possibly lowered) action and what verification changed.
- */
+/** Pure. Returns the verified findings, the possibly lowered action and what verification changed. */
 export function verifyReview(output, { text, policy }) {
   const clauses = clauseByCode(policy);
   const checked = output.findings.map((raw) => verifyFinding(raw, { text, policy, clauses }));

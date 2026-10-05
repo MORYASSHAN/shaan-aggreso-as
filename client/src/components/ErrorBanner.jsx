@@ -1,9 +1,6 @@
 import { Button } from './Button.jsx';
 
-/**
- * Red banner with the server message and the requestId.
- * A 409 means the data changed, so it offers Reload instead of Retry.
- */
+// A 409 means the data changed, so offer Reload instead of Retry.
 export function ErrorBanner({ error, onRetry }) {
   if (!error) return null;
   const conflict = error.isConflict;

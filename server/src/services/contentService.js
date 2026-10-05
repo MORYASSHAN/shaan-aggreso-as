@@ -117,7 +117,6 @@ export async function getPost(postId, viewer) {
 
 function addReport({ contentId, actor, reasonCode, note, requestId }) {
   return withTransaction(async (session) => {
-    // Join the open case for this content, raising its report count and priority.
     let kase = await Case.findOneAndUpdate(
       { contentId, status: { $in: JOINABLE_STATUSES } },
       [
@@ -227,7 +226,6 @@ export async function listMyContent(actor) {
   }));
 }
 
-/** Moderation history of one item: cases, analyses, decisions, appeals and the audit timeline. */
 export async function getHistory(contentId, viewer) {
   const content = await Content.findById(contentId).lean();
   if (!content) throw appError(ERROR.NOT_FOUND, 'Content not found.');

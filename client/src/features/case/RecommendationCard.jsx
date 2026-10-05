@@ -2,7 +2,6 @@ import { ActionBadge, AiLabel, SeverityBadge, VersionBadge } from '../../compone
 import { Section } from '../../components/Page.jsx';
 import { percent } from '../../lib/format.js';
 
-/** The recommendation is only a suggestion; a human decides below. */
 export function RecommendationCard({ analysis, aiUnavailable }) {
   const rec = analysis.recommendation;
   const strongest = [...analysis.aiFindings].sort((a, b) => b.confidence - a.confidence)[0];

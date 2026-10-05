@@ -1,7 +1,5 @@
 import { api } from './client.js';
 
-// One small function per endpoint. Components never call fetch directly.
-
 export const authApi = {
   me: () => api('/auth/me'),
   login: (body) => api('/auth/login', { method: 'POST', body }),

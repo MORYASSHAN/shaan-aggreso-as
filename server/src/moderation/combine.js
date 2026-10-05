@@ -56,11 +56,7 @@ function priorityFor({ severity, reportCount, needsHuman, escalated }) {
   return Math.min(99, PRIORITY_BASE[severity] + Math.min(reportCount * 10, 20) + (needsHuman ? 5 : 0));
 }
 
-/**
- * Merges rule and AI findings into one recommendation. Pure: no database calls.
- * `ai` is the verified review, or null when the AI call failed.
- * The recommendation is only a suggestion; nothing reads it to change content.
- */
+/** Pure. `ai` is the verified review, or null when the AI call failed. Nothing reads the result to change content. */
 export function combine({ ruleFindings, ai, policy, trigger, reportCount }) {
   const aiFindings = ai?.findings ?? [];
   const allFindings = [...ruleFindings, ...aiFindings];

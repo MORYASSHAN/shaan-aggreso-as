@@ -7,8 +7,9 @@ import { ErrorBanner } from '../../components/ErrorBanner.jsx';
 import { PageHeader, Section } from '../../components/Page.jsx';
 import { QueryState } from '../../components/QueryState.jsx';
 import { useToast } from '../../components/Toast.jsx';
-import { CASE_STATUS } from '../../lib/constants.js';
+import { CASE_STATUS, MODERATOR_ROLES } from '../../lib/constants.js';
 import { dateTime, humanize, shortId, timeAgo } from '../../lib/format.js';
+import { useSession } from '../auth/session.js';
 import { DecisionForm } from './DecisionForm.jsx';
 import { Findings } from './Findings.jsx';
 import { HighlightedText } from './HighlightedText.jsx';
@@ -170,11 +171,14 @@ function CaseActions({ data }) {
   );
 }
 
-function CaseBody({ data }) {
+function CaseBody({ data, canModerate }) {
   const { case: kase, analysis } = data;
-  const canDecide = kase.status === CASE_STATUS.AWAITING_REVIEW && analysis;
+  const awaiting = kase.status === CASE_STATUS.AWAITING_REVIEW && analysis;
   return (
     <div className="flex flex-col gap-4">
+      {!canModerate && (
+        <Notice>Read-only view. Admins can inspect cases, but only moderators make decisions.</Notice>
+      )}
       {data.aiUnavailable && (
         <Notice tone="danger">
           AI review unavailable. Showing rule findings only; a person must review this case.
@@ -204,7 +208,7 @@ function CaseBody({ data }) {
           ) : (
             <Notice>Analysis is still running. Refresh in a moment.</Notice>
           )}
-          {canDecide && (
+          {awaiting && canModerate && (
             <DecisionForm
               caseId={kase._id}
               analysis={analysis}
@@ -221,6 +225,8 @@ function CaseBody({ data }) {
 export function CaseDetailPage() {
   const { id } = useParams();
   const query = useQuery({ queryKey: ['case', id], queryFn: () => casesApi.get(id) });
+  const { data: user } = useSession();
+  const canModerate = MODERATOR_ROLES.includes(user?.role);
   return (
     <div>
       <Link to="/queue" className="label mb-6 inline-block hover:text-fg">
@@ -236,9 +242,9 @@ export function CaseDetailPage() {
                   Case detail <StatusBadge status={data.case.status} />
                 </span>
               }
-              action={<CaseActions data={data} />}
+              action={canModerate && <CaseActions data={data} />}
             />
-            <CaseBody data={data} />
+            <CaseBody data={data} canModerate={canModerate} />
           </>
         )}
       </QueryState>

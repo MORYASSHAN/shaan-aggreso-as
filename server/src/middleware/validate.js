@@ -10,7 +10,7 @@ function fieldErrors(zodError) {
   return fields;
 }
 
-/** Validates req.body; the parsed (trimmed, defaulted) value replaces it. */
+// Replaces req.body with the parsed (trimmed, defaulted) value.
 export function validate(schema) {
   return (req, _res, next) => {
     const parsed = schema.safeParse(req.body ?? {});
@@ -25,7 +25,7 @@ export function validate(schema) {
   };
 }
 
-/** Express 5 makes req.query read-only, so the parsed query is stored on req.validQuery. */
+// Express 5 makes req.query read-only, so the parsed query goes on req.validQuery.
 export function validateQuery(schema) {
   return (req, _res, next) => {
     const parsed = schema.safeParse(req.query ?? {});

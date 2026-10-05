@@ -4,10 +4,9 @@ import { linkCountRule } from './linkCountRule.js';
 import { patternRule } from './patternRule.js';
 import { repeatRule } from './repeatRule.js';
 
-// Each rule is a small pure function (text, policy, context) => findings. Adding one never touches the others.
+// Each rule is a pure (text, policy, context) => findings.
 export const RULES = [keywordRule, patternRule, linkCountRule, contactRule, repeatRule];
 
-/** Runs every rule and returns all findings. Rules never decide anything. */
 export function runRules(text, policy, context = {}) {
   return RULES.flatMap((rule) => rule(text, policy, context));
 }

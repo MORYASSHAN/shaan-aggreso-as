@@ -128,10 +128,7 @@ export async function install(json, { publishedBy = null } = {}) {
   });
 }
 
-/**
- * Publishes a new version. Switching the active version happens inside one transaction,
- * so there is never zero or two active policies. Then unresolved cases are re-evaluated.
- */
+// The switch happens in one transaction so there is never zero or two active policies.
 export async function publish(json, actor, requestId) {
   const parsed = PolicyFileSchema.safeParse(json);
   if (!parsed.success) {

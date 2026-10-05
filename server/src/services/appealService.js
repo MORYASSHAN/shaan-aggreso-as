@@ -21,10 +21,7 @@ import * as policyService from './policyService.js';
 const SYSTEM = { type: ACTOR_TYPE.SYSTEM };
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/**
- * Pure routing rule: senior moderators who did not make the original decision,
- * fewest open appeals first. Returns null when nobody is eligible.
- */
+// Senior moderators other than the original decider, fewest open appeals first; null if nobody is eligible.
 export function chooseReviewer(seniors, openCounts, originalReviewerId) {
   const eligible = seniors.filter((s) => String(s._id) !== String(originalReviewerId));
   if (eligible.length === 0) return null;
@@ -248,7 +245,6 @@ async function claimIfUnassigned(appeal, actor, requestId) {
   });
 }
 
-/** A second, different moderator resolves the appeal. The AI has no vote. */
 export async function resolve({ appealId, input, actor, requestId }) {
   assertHuman(actor);
   const appeal = await Appeal.findById(appealId).lean();

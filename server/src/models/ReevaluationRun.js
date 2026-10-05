@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { REEVALUATION_STATUS } from '../constants.js';
 
-// Progress of one re-evaluation after a policy is published.
 const reevaluationRunSchema = new mongoose.Schema(
   {
     fromVersion: { type: Number, required: true },

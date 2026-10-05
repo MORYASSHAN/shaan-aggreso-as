@@ -1,11 +1,10 @@
-/** An error from the API, carrying the server's code, message and the requestId that matches its log line. */
 export class ApiError extends Error {
   constructor({ status, code, message, requestId, details }) {
     super(message);
     Object.assign(this, { name: 'ApiError', status, code, requestId, details });
   }
 
-  /** 409s mean the data changed under us: the fix is to reload, not to retry. */
+  // 409: the data changed underneath, so reload rather than retry.
   get isConflict() {
     return this.status === 409;
   }

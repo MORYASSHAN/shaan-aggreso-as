@@ -4,16 +4,44 @@ import { AiTimeoutError } from './errors.js';
 
 let client;
 
+// Retries are ours, not the SDK's, so a 429 can wait for the delay Gemini asks for.
+const MAX_ATTEMPTS = 3;
+const MAX_WAIT_MS = 60_000;
+const RETRYABLE = new Set([429, 500, 502, 503, 504]);
+
 function getClient() {
-  // Per-attempt timeout from config, and 1 retry (2 attempts total).
   client ??= new GoogleGenAI({
     apiKey: config.GEMINI_API_KEY,
-    httpOptions: {
-      timeout: config.AI_TIMEOUT_MS,
-      retryOptions: { attempts: 2 },
-    },
+    httpOptions: { timeout: config.AI_TIMEOUT_MS, retryOptions: { attempts: 1 } },
   });
   return client;
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Gemini's RetryInfo hint on a 429, otherwise exponential backoff (2 s, 4 s, ...).
+export function retryDelayMs(err, attempt) {
+  const hint = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(String(err?.message))?.[1];
+  const ms = hint ? Number(hint) * 1000 + 500 : 2000 * 2 ** (attempt - 1);
+  return Math.min(ms, MAX_WAIT_MS);
+}
+
+function isRetryable(err) {
+  return RETRYABLE.has(err?.status) || err?.name === 'AbortError' || err?.name === 'TimeoutError';
+}
+
+// Re-analyse waits for this call, so all attempts together get a budget of 2 × AI_TIMEOUT_MS.
+async function generateWithRetry(request) {
+  const deadline = Date.now() + 2 * config.AI_TIMEOUT_MS;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await getClient().models.generateContent(request);
+    } catch (err) {
+      const wait = retryDelayMs(err, attempt);
+      if (attempt >= MAX_ATTEMPTS || !isRetryable(err) || Date.now() + wait >= deadline) throw err;
+      await sleep(wait);
+    }
+  }
 }
 
 // Our messages use { role: 'user' | 'assistant', content: string }; Gemini wants role 'model' and parts.
@@ -24,14 +52,11 @@ function toContents(messages) {
   }));
 }
 
-/**
- * Calls Gemini with function calling forced to one function, so the reply is structured JSON instead of free text.
- * Returns the raw function args; the caller validates them with Zod before trusting any of it.
- */
+// Forces a single function call so the reply is structured; the caller validates the raw args with Zod.
 async function callTool({ system, messages, tool }) {
   let response;
   try {
-    response = await getClient().models.generateContent({
+    response = await generateWithRetry({
       model: config.GEMINI_MODEL,
       contents: toContents(messages),
       config: {
