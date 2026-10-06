@@ -219,7 +219,7 @@ Start the API (port 4000) and the web app (port 5173):
 npm run dev
 ```
 
-Open <http://localhost:5173> and log in with one of the [demo accounts](#7-roles-and-demo-accounts), for
+Open <https://shaan-aggroso-as.vercel.app/login> and log in with one of the [demo accounts](#7-roles-and-demo-accounts), for
 example `admin@example.com` with password `1234`.
 
 ### MongoDB Atlas checklist
